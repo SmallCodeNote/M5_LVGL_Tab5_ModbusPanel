@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+extern void action_save_device_parameter(lv_event_t * e);
 
 
 #ifdef __cplusplus

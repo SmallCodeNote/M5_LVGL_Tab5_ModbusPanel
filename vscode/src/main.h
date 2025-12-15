@@ -2,6 +2,7 @@
 #define MY_MAIN_H
 
 #include <ModbusRTU.h>
+#include "my_unit_control.h"
 
 // Tab5 RS485
 #define MODBUS_TX_PIN 20 // RS485
@@ -25,55 +26,8 @@
 
 extern bool inUpdateCall;
 
-// ===== Modbus config =====
-#define SLAVE_ID 2
-
-// Register adress offset enum
-enum HoldingRegister
-{
-    lock_flag = 0,
-    run_flag,
-    display_pv_1,
-    display_pv_2,
-    display_pv_3,
-    display_pv_4,
-    display_pv_5,
-    run_progress_max,
-    run_progress,
-    run_sv_1,
-    run_sv_2,
-    run_sv_3,
-    run_sv_4,
-    run_sv_5,
-    run_sv_select,
-    run_sv_status,
-    unit_int_sv_1,
-    unit_int_sv_2,
-    unit_int_sv_3,
-    unit_int_sv_4,
-    unit_int_sv_5,
-    unit_pv_1,
-    unit_pv_2,
-    unit_pv_3,
-    unit_pv_4,
-    unit_pv_5,
-    REG_COUNT
-};
-
-struct ModbusRegisterValues
-{
-    bool run;
-    bool freeSwitch;
-    int32_t mv;
-    int32_t sv;
-    int32_t rem;
-    int32_t remRate;
-    float info_1;
-    float info_2;
-    float info_3;
-};
-
-// Modbus object
-extern ModbusRTU mb;
+void update_device_from_MODBUS_Registry();
+void update_MODBUS_Registry_from_device();
+extern ModbusRegisterValues ResBuff;
 
 #endif
