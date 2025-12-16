@@ -93,11 +93,52 @@ void update_device_from_MODBUS_Registry()
   update_and_call(ResBuff.unit_pv_5, ResPrev.unit_pv_5, (int32_t)mb.Hreg(unit_pv_5), set_var_unit_pv_5);
 }
 
+void update_struct_from_MODBUS_Registry(ModbusRegisterValues &deviceParam)
+{
+  // flag
+  deviceParam.lock_flag = (mb.Hreg(lock_flag) > 0);
+  deviceParam.run_flag = (mb.Hreg(run_flag) > 0);
+
+  // display
+  deviceParam.display_pv_1 = (int32_t)mb.Hreg(display_pv_1);
+  deviceParam.display_pv_2 = (int32_t)mb.Hreg(display_pv_2);
+  deviceParam.display_pv_3 = (int32_t)mb.Hreg(display_pv_3);
+  deviceParam.display_pv_4 = (int32_t)mb.Hreg(display_pv_4);
+  deviceParam.display_pv_5 = (int32_t)mb.Hreg(display_pv_5);
+
+  // progress
+  deviceParam.run_progress_max = (int32_t)mb.Hreg(run_progress_max);
+  deviceParam.run_progress = (int32_t)mb.Hreg(run_progress);
+
+  // run sv
+  deviceParam.run_sv_1 = (int32_t)mb.Hreg(run_sv_1);
+  deviceParam.run_sv_2 = (int32_t)mb.Hreg(run_sv_2);
+  deviceParam.run_sv_3 = (int32_t)mb.Hreg(run_sv_3);
+  deviceParam.run_sv_4 = (int32_t)mb.Hreg(run_sv_4);
+  deviceParam.run_sv_5 = (int32_t)mb.Hreg(run_sv_5);
+  deviceParam.run_sv_select = (int32_t)mb.Hreg(run_sv_select);
+  deviceParam.run_sv_status = (int32_t)mb.Hreg(run_sv_status);
+
+  // unit read interval (SV)
+  deviceParam.unit_int_sv_1 = (int32_t)mb.Hreg(unit_int_sv_1);
+  deviceParam.unit_int_sv_2 = (int32_t)mb.Hreg(unit_int_sv_2);
+  deviceParam.unit_int_sv_3 = (int32_t)mb.Hreg(unit_int_sv_3);
+  deviceParam.unit_int_sv_4 = (int32_t)mb.Hreg(unit_int_sv_4);
+  deviceParam.unit_int_sv_5 = (int32_t)mb.Hreg(unit_int_sv_5);
+
+  // unit read pv
+  deviceParam.unit_pv_1 = (int32_t)mb.Hreg(unit_pv_1);
+  deviceParam.unit_pv_2 = (int32_t)mb.Hreg(unit_pv_2);
+  deviceParam.unit_pv_3 = (int32_t)mb.Hreg(unit_pv_3);
+  deviceParam.unit_pv_4 = (int32_t)mb.Hreg(unit_pv_4);
+  deviceParam.unit_pv_5 = (int32_t)mb.Hreg(unit_pv_5);
+}
+
 void update_MODBUS_Registry_from_device()
 {
   // flag
   mb.Hreg(lock_flag, get_var_lock_flag() ? 1 : 0);
-  mb.Hreg(run_flag,  get_var_run_flag()  ? 1 : 0);
+  mb.Hreg(run_flag, get_var_run_flag() ? 1 : 0);
 
   // display
   mb.Hreg(display_pv_1, (uint16_t)get_var_display_pv_1());
@@ -108,14 +149,14 @@ void update_MODBUS_Registry_from_device()
 
   // progress
   mb.Hreg(run_progress_max, (uint16_t)get_var_run_progress_max());
-  mb.Hreg(run_progress,     (uint16_t)get_var_run_progress());
+  mb.Hreg(run_progress, (uint16_t)get_var_run_progress());
 
   // run sv
-  mb.Hreg(run_sv_1,      (uint16_t)get_var_run_sv_1());
-  mb.Hreg(run_sv_2,      (uint16_t)get_var_run_sv_2());
-  mb.Hreg(run_sv_3,      (uint16_t)get_var_run_sv_3());
-  mb.Hreg(run_sv_4,      (uint16_t)get_var_run_sv_4());
-  mb.Hreg(run_sv_5,      (uint16_t)get_var_run_sv_5());
+  mb.Hreg(run_sv_1, (uint16_t)get_var_run_sv_1());
+  mb.Hreg(run_sv_2, (uint16_t)get_var_run_sv_2());
+  mb.Hreg(run_sv_3, (uint16_t)get_var_run_sv_3());
+  mb.Hreg(run_sv_4, (uint16_t)get_var_run_sv_4());
+  mb.Hreg(run_sv_5, (uint16_t)get_var_run_sv_5());
   mb.Hreg(run_sv_select, (uint16_t)get_var_run_sv_select());
   mb.Hreg(run_sv_status, (uint16_t)get_var_run_sv_status());
 
@@ -132,6 +173,47 @@ void update_MODBUS_Registry_from_device()
   mb.Hreg(unit_pv_3, (uint16_t)get_var_unit_pv_3());
   mb.Hreg(unit_pv_4, (uint16_t)get_var_unit_pv_4());
   mb.Hreg(unit_pv_5, (uint16_t)get_var_unit_pv_5());
+}
+
+void update_MODBUS_Registry_from_struct(ModbusRegisterValues deviceParam)
+{
+  // flag
+  mb.Hreg(lock_flag, deviceParam.lock_flag ? 1 : 0);
+  mb.Hreg(run_flag, deviceParam.run_flag ? 1 : 0);
+
+  // display
+  mb.Hreg(display_pv_1, (uint16_t)deviceParam.display_pv_1);
+  mb.Hreg(display_pv_2, (uint16_t)deviceParam.display_pv_2);
+  mb.Hreg(display_pv_3, (uint16_t)deviceParam.display_pv_3);
+  mb.Hreg(display_pv_4, (uint16_t)deviceParam.display_pv_4);
+  mb.Hreg(display_pv_5, (uint16_t)deviceParam.display_pv_5);
+
+  // progress
+  mb.Hreg(run_progress_max, (uint16_t)deviceParam.run_progress_max);
+  mb.Hreg(run_progress, (uint16_t)deviceParam.run_progress);
+
+  // run sv
+  mb.Hreg(run_sv_1, (uint16_t)deviceParam.run_sv_1);
+  mb.Hreg(run_sv_2, (uint16_t)deviceParam.run_sv_2);
+  mb.Hreg(run_sv_3, (uint16_t)deviceParam.run_sv_3);
+  mb.Hreg(run_sv_4, (uint16_t)deviceParam.run_sv_4);
+  mb.Hreg(run_sv_5, (uint16_t)deviceParam.run_sv_5);
+  mb.Hreg(run_sv_select, (uint16_t)deviceParam.run_sv_select);
+  mb.Hreg(run_sv_status, (uint16_t)deviceParam.run_sv_status);
+
+  // unit read interval (SV)
+  mb.Hreg(unit_int_sv_1, (uint16_t)deviceParam.unit_int_sv_1);
+  mb.Hreg(unit_int_sv_2, (uint16_t)deviceParam.unit_int_sv_2);
+  mb.Hreg(unit_int_sv_3, (uint16_t)deviceParam.unit_int_sv_3);
+  mb.Hreg(unit_int_sv_4, (uint16_t)deviceParam.unit_int_sv_4);
+  mb.Hreg(unit_int_sv_5, (uint16_t)deviceParam.unit_int_sv_5);
+
+  // unit read pv
+  mb.Hreg(unit_pv_1, (uint16_t)deviceParam.unit_pv_1);
+  mb.Hreg(unit_pv_2, (uint16_t)deviceParam.unit_pv_2);
+  mb.Hreg(unit_pv_3, (uint16_t)deviceParam.unit_pv_3);
+  mb.Hreg(unit_pv_4, (uint16_t)deviceParam.unit_pv_4);
+  mb.Hreg(unit_pv_5, (uint16_t)deviceParam.unit_pv_5);
 }
 
 void setup_LVGL()
@@ -156,6 +238,9 @@ void setup()
 
   setup_LVGL();
   setup_MODBUS_Slave(SLAVE_ID);
+
+  update_MODBUS_Registry_from_struct(ResBuff);
+  update_device_from_MODBUS_Registry();
 
   Wire.begin(PortA_SDA, PortA_SCL);
   Wire.setClock(100000);

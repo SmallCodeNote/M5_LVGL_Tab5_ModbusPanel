@@ -28,6 +28,7 @@ extern bool inUpdateCall;
 
 void update_device_from_MODBUS_Registry();
 void update_MODBUS_Registry_from_device();
+void update_struct_from_MODBUS_Registry(ModbusRegisterValues &deviceParam);
 extern ModbusRegisterValues ResBuff;
 
 #endif
