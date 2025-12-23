@@ -16,7 +16,17 @@ typedef enum {
     keyID_unit_int_sv_3 = 3,
     keyID_unit_int_sv_4 = 4,
     keyID_unit_int_sv_5 = 5,
-    keyID_run_progress_max = 6
+    keyID_run_progress_max = 6,
+    keyID_chart_max_1 = 7,
+    keyID_chart_max_2 = 8,
+    keyID_chart_max_3 = 9,
+    keyID_chart_max_4 = 10,
+    keyID_chart_max_5 = 11,
+    keyID_chart_min_1 = 12,
+    keyID_chart_min_2 = 13,
+    keyID_chart_min_3 = 14,
+    keyID_chart_min_4 = 15,
+    keyID_chart_min_5 = 16
 } keyID;
 
 // Flow global variables
@@ -81,6 +91,26 @@ extern bool get_var_run_flag();
 extern void set_var_run_flag(bool value);
 extern bool get_var_lock_flag();
 extern void set_var_lock_flag(bool value);
+extern int32_t get_var_chart_max_1();
+extern void set_var_chart_max_1(int32_t value);
+extern int32_t get_var_chart_max_2();
+extern void set_var_chart_max_2(int32_t value);
+extern int32_t get_var_chart_max_3();
+extern void set_var_chart_max_3(int32_t value);
+extern int32_t get_var_chart_max_4();
+extern void set_var_chart_max_4(int32_t value);
+extern int32_t get_var_chart_max_5();
+extern void set_var_chart_max_5(int32_t value);
+extern int32_t get_var_chart_min_1();
+extern void set_var_chart_min_1(int32_t value);
+extern int32_t get_var_chart_min_2();
+extern void set_var_chart_min_2(int32_t value);
+extern int32_t get_var_chart_min_3();
+extern void set_var_chart_min_3(int32_t value);
+extern int32_t get_var_chart_min_4();
+extern void set_var_chart_min_4(int32_t value);
+extern int32_t get_var_chart_min_5();
+extern void set_var_chart_min_5(int32_t value);
 
 
 #ifdef __cplusplus

@@ -79,3 +79,33 @@ extern "C" void set_var_run_flag(bool value) { run_flag = value; }
 bool lock_flag; extern "C" bool get_var_lock_flag() { return lock_flag; }
 extern "C" void set_var_lock_flag(bool value) { lock_flag = value; }
 
+int32_t chart_max_1; extern "C" int32_t get_var_chart_max_1() { return chart_max_1; }
+extern "C" void set_var_chart_max_1(int32_t value) { chart_max_1 = value; }
+
+int32_t chart_max_2; extern "C" int32_t get_var_chart_max_2() { return chart_max_2; }
+extern "C" void set_var_chart_max_2(int32_t value) { chart_max_2 = value; }
+
+int32_t chart_max_3; extern "C" int32_t get_var_chart_max_3() { return chart_max_3; }
+extern "C" void set_var_chart_max_3(int32_t value) { chart_max_3 = value; }
+
+int32_t chart_max_4; extern "C" int32_t get_var_chart_max_4() { return chart_max_4; }
+extern "C" void set_var_chart_max_4(int32_t value) { chart_max_4 = value; }
+
+int32_t chart_max_5; extern "C" int32_t get_var_chart_max_5() { return chart_max_5; }
+extern "C" void set_var_chart_max_5(int32_t value) { chart_max_5 = value; }
+
+int32_t chart_min_1; extern "C" int32_t get_var_chart_min_1() { return chart_min_1; }
+extern "C" void set_var_chart_min_1(int32_t value) { chart_min_1 = value; }
+
+int32_t chart_min_2; extern "C" int32_t get_var_chart_min_2() { return chart_min_2; }
+extern "C" void set_var_chart_min_2(int32_t value) { chart_min_2 = value; }
+
+int32_t chart_min_3; extern "C" int32_t get_var_chart_min_3() { return chart_min_3; }
+extern "C" void set_var_chart_min_3(int32_t value) { chart_min_3 = value; }
+
+int32_t chart_min_4; extern "C" int32_t get_var_chart_min_4() { return chart_min_4; }
+extern "C" void set_var_chart_min_4(int32_t value) { chart_min_4 = value; }
+
+int32_t chart_min_5; extern "C" int32_t get_var_chart_min_5() { return chart_min_5; }
+extern "C" void set_var_chart_min_5(int32_t value) { chart_min_5 = value; }
+

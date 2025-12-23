@@ -52,6 +52,16 @@ enum HoldingRegister
     unit_pv_3,
     unit_pv_4,
     unit_pv_5,
+    chart_max_1,
+    chart_max_2,
+    chart_max_3,
+    chart_max_4,
+    chart_max_5,
+    chart_min_1,
+    chart_min_2,
+    chart_min_3,
+    chart_min_4,
+    chart_min_5,
     REG_COUNT
 };
 
@@ -83,12 +93,28 @@ struct ModbusRegisterValues
     int32_t unit_pv_3;
     int32_t unit_pv_4;
     int32_t unit_pv_5;
+    int32_t chart_max_1;
+    int32_t chart_max_2;
+    int32_t chart_max_3;
+    int32_t chart_max_4;
+    int32_t chart_max_5;
+    int32_t chart_min_1;
+    int32_t chart_min_2;
+    int32_t chart_min_3;
+    int32_t chart_min_4;
+    int32_t chart_min_5;
 };
 
 // Modbus object
 extern ModbusRTU mb;
+extern ModbusRegisterValues ResBuff;
 
-void loadEEPROM(ModbusRegisterValues &deviceParam);
-void saveEEPROM(ModbusRegisterValues deviceParam);
+void loadEEPROM();
+void saveEEPROM();
+
+void update_registry_from_struct();
+void update_struct_from_registry();
+void update_device_from_struct();
+void update_struct_from_device();
 
 #endif

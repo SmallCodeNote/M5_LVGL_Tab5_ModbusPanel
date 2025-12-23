@@ -20,14 +20,51 @@
 #include "main.h"
 
 ModbusRTU mb;
-ModbusRegisterValues ResBuff;
-ModbusRegisterValues ResPrev;
+
 HardwareSerial &ModbusRTU_Serial = Serial2;
 
 SONIC_I2C us_sensor;
 M5UnitPbHub pbhub;
 ClosedCube::Wired::TCA9548A pahub;
 #define PaHub_I2C_ADDRESS (0x70)
+
+lv_chart_series_t *ser1;
+lv_chart_series_t *ser2;
+lv_chart_series_t *ser3;
+lv_chart_series_t *ser4;
+lv_chart_series_t *ser5;
+
+int32_t *ser1_y_points;
+int32_t *ser2_y_points;
+int32_t *ser3_y_points;
+int32_t *ser4_y_points;
+int32_t *ser5_y_points;
+
+void chart_auto_scale(lv_obj_t *chart, lv_chart_series_t *ser)
+{
+  int32_t *y = lv_chart_get_series_y_array(chart, ser);
+  uint32_t count = lv_chart_get_point_count(chart);
+
+  int32_t min_v = INT32_MAX;
+  int32_t max_v = INT32_MIN;
+
+  for (uint32_t i = 0; i < count; i++)
+  {
+    if (y[i] < min_v)
+      min_v = y[i];
+    if (y[i] > max_v)
+      max_v = y[i];
+  }
+
+  // 余裕を持たせる（見やすさのため）
+  int32_t margin = (max_v - min_v) / 10;
+  if (margin < 10)
+    margin = 10;
+
+  lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y,
+                     min_v - margin,
+                     max_v + margin);
+}
 
 void setup_MODBUS_Slave(uint8_t slaveid)
 {
@@ -41,179 +78,13 @@ void setup_MODBUS_Slave(uint8_t slaveid)
   // attachInterrupt(digitalPinToInterrupt(MODBUS_DE_PIN), on_MODBUS_DE_PIN_fallingChange, FALLING);
 }
 
-template <typename T>
-void update_and_call(T &current, T &previous, T newValue, void (*callback)(T))
+void setup_LVGL_chart_set(lv_obj_t *target_chart, lv_chart_series_t **target_ser, int32_t **target_ser_y_points)
 {
-  current = newValue;
-  if (current != previous)
-  {
-    callback(current);
-    previous = current;
-  }
-}
-
-void update_device_from_MODBUS_Registry()
-{
-  // flag
-  update_and_call(ResBuff.lock_flag, ResPrev.lock_flag, mb.Hreg(lock_flag) > 0, set_var_lock_flag);
-  update_and_call(ResBuff.run_flag, ResPrev.run_flag, mb.Hreg(run_flag) > 0, set_var_run_flag);
-
-  // display
-  update_and_call(ResBuff.display_pv_1, ResPrev.display_pv_1, (int32_t)mb.Hreg(display_pv_1), set_var_display_pv_1);
-  update_and_call(ResBuff.display_pv_2, ResPrev.display_pv_2, (int32_t)mb.Hreg(display_pv_2), set_var_display_pv_2);
-  update_and_call(ResBuff.display_pv_3, ResPrev.display_pv_3, (int32_t)mb.Hreg(display_pv_3), set_var_display_pv_3);
-  update_and_call(ResBuff.display_pv_4, ResPrev.display_pv_4, (int32_t)mb.Hreg(display_pv_4), set_var_display_pv_4);
-  update_and_call(ResBuff.display_pv_5, ResPrev.display_pv_5, (int32_t)mb.Hreg(display_pv_5), set_var_display_pv_5);
-
-  // progress
-  update_and_call(ResBuff.run_progress_max, ResPrev.run_progress_max, (int32_t)mb.Hreg(run_progress_max), set_var_run_progress_max);
-  update_and_call(ResBuff.run_progress, ResPrev.run_progress, (int32_t)mb.Hreg(run_progress), set_var_run_progress);
-
-  // run sv
-  update_and_call(ResBuff.run_sv_1, ResPrev.run_sv_1, (int32_t)mb.Hreg(run_sv_1), set_var_run_sv_1);
-  update_and_call(ResBuff.run_sv_2, ResPrev.run_sv_2, (int32_t)mb.Hreg(run_sv_2), set_var_run_sv_2);
-  update_and_call(ResBuff.run_sv_3, ResPrev.run_sv_3, (int32_t)mb.Hreg(run_sv_3), set_var_run_sv_3);
-  update_and_call(ResBuff.run_sv_4, ResPrev.run_sv_4, (int32_t)mb.Hreg(run_sv_4), set_var_run_sv_4);
-  update_and_call(ResBuff.run_sv_5, ResPrev.run_sv_5, (int32_t)mb.Hreg(run_sv_5), set_var_run_sv_5);
-  update_and_call(ResBuff.run_sv_select, ResPrev.run_sv_select, (int32_t)mb.Hreg(run_sv_select), set_var_run_sv_select);
-  update_and_call(ResBuff.run_sv_status, ResPrev.run_sv_status, (int32_t)mb.Hreg(run_sv_status), set_var_run_sv_status);
-
-  // unit read interval
-  update_and_call(ResBuff.unit_int_sv_1, ResPrev.unit_int_sv_1, (int32_t)mb.Hreg(unit_int_sv_1), set_var_unit_int_sv_1);
-  update_and_call(ResBuff.unit_int_sv_2, ResPrev.unit_int_sv_2, (int32_t)mb.Hreg(unit_int_sv_2), set_var_unit_int_sv_2);
-  update_and_call(ResBuff.unit_int_sv_3, ResPrev.unit_int_sv_3, (int32_t)mb.Hreg(unit_int_sv_3), set_var_unit_int_sv_3);
-  update_and_call(ResBuff.unit_int_sv_4, ResPrev.unit_int_sv_4, (int32_t)mb.Hreg(unit_int_sv_4), set_var_unit_int_sv_4);
-  update_and_call(ResBuff.unit_int_sv_5, ResPrev.unit_int_sv_5, (int32_t)mb.Hreg(unit_int_sv_5), set_var_unit_int_sv_5);
-
-  // unit read pv
-  update_and_call(ResBuff.unit_pv_1, ResPrev.unit_pv_1, (int32_t)mb.Hreg(unit_pv_1), set_var_unit_pv_1);
-  update_and_call(ResBuff.unit_pv_2, ResPrev.unit_pv_2, (int32_t)mb.Hreg(unit_pv_2), set_var_unit_pv_2);
-  update_and_call(ResBuff.unit_pv_3, ResPrev.unit_pv_3, (int32_t)mb.Hreg(unit_pv_3), set_var_unit_pv_3);
-  update_and_call(ResBuff.unit_pv_4, ResPrev.unit_pv_4, (int32_t)mb.Hreg(unit_pv_4), set_var_unit_pv_4);
-  update_and_call(ResBuff.unit_pv_5, ResPrev.unit_pv_5, (int32_t)mb.Hreg(unit_pv_5), set_var_unit_pv_5);
-}
-
-void update_struct_from_MODBUS_Registry(ModbusRegisterValues &deviceParam)
-{
-  // flag
-  deviceParam.lock_flag = (mb.Hreg(lock_flag) > 0);
-  deviceParam.run_flag = (mb.Hreg(run_flag) > 0);
-
-  // display
-  deviceParam.display_pv_1 = (int32_t)mb.Hreg(display_pv_1);
-  deviceParam.display_pv_2 = (int32_t)mb.Hreg(display_pv_2);
-  deviceParam.display_pv_3 = (int32_t)mb.Hreg(display_pv_3);
-  deviceParam.display_pv_4 = (int32_t)mb.Hreg(display_pv_4);
-  deviceParam.display_pv_5 = (int32_t)mb.Hreg(display_pv_5);
-
-  // progress
-  deviceParam.run_progress_max = (int32_t)mb.Hreg(run_progress_max);
-  deviceParam.run_progress = (int32_t)mb.Hreg(run_progress);
-
-  // run sv
-  deviceParam.run_sv_1 = (int32_t)mb.Hreg(run_sv_1);
-  deviceParam.run_sv_2 = (int32_t)mb.Hreg(run_sv_2);
-  deviceParam.run_sv_3 = (int32_t)mb.Hreg(run_sv_3);
-  deviceParam.run_sv_4 = (int32_t)mb.Hreg(run_sv_4);
-  deviceParam.run_sv_5 = (int32_t)mb.Hreg(run_sv_5);
-  deviceParam.run_sv_select = (int32_t)mb.Hreg(run_sv_select);
-  deviceParam.run_sv_status = (int32_t)mb.Hreg(run_sv_status);
-
-  // unit read interval (SV)
-  deviceParam.unit_int_sv_1 = (int32_t)mb.Hreg(unit_int_sv_1);
-  deviceParam.unit_int_sv_2 = (int32_t)mb.Hreg(unit_int_sv_2);
-  deviceParam.unit_int_sv_3 = (int32_t)mb.Hreg(unit_int_sv_3);
-  deviceParam.unit_int_sv_4 = (int32_t)mb.Hreg(unit_int_sv_4);
-  deviceParam.unit_int_sv_5 = (int32_t)mb.Hreg(unit_int_sv_5);
-
-  // unit read pv
-  deviceParam.unit_pv_1 = (int32_t)mb.Hreg(unit_pv_1);
-  deviceParam.unit_pv_2 = (int32_t)mb.Hreg(unit_pv_2);
-  deviceParam.unit_pv_3 = (int32_t)mb.Hreg(unit_pv_3);
-  deviceParam.unit_pv_4 = (int32_t)mb.Hreg(unit_pv_4);
-  deviceParam.unit_pv_5 = (int32_t)mb.Hreg(unit_pv_5);
-}
-
-void update_MODBUS_Registry_from_device()
-{
-  // flag
-  mb.Hreg(lock_flag, get_var_lock_flag() ? 1 : 0);
-  mb.Hreg(run_flag, get_var_run_flag() ? 1 : 0);
-
-  // display
-  mb.Hreg(display_pv_1, (uint16_t)get_var_display_pv_1());
-  mb.Hreg(display_pv_2, (uint16_t)get_var_display_pv_2());
-  mb.Hreg(display_pv_3, (uint16_t)get_var_display_pv_3());
-  mb.Hreg(display_pv_4, (uint16_t)get_var_display_pv_4());
-  mb.Hreg(display_pv_5, (uint16_t)get_var_display_pv_5());
-
-  // progress
-  mb.Hreg(run_progress_max, (uint16_t)get_var_run_progress_max());
-  mb.Hreg(run_progress, (uint16_t)get_var_run_progress());
-
-  // run sv
-  mb.Hreg(run_sv_1, (uint16_t)get_var_run_sv_1());
-  mb.Hreg(run_sv_2, (uint16_t)get_var_run_sv_2());
-  mb.Hreg(run_sv_3, (uint16_t)get_var_run_sv_3());
-  mb.Hreg(run_sv_4, (uint16_t)get_var_run_sv_4());
-  mb.Hreg(run_sv_5, (uint16_t)get_var_run_sv_5());
-  mb.Hreg(run_sv_select, (uint16_t)get_var_run_sv_select());
-  mb.Hreg(run_sv_status, (uint16_t)get_var_run_sv_status());
-
-  // unit read interval
-  mb.Hreg(unit_int_sv_1, (uint16_t)get_var_unit_int_sv_1());
-  mb.Hreg(unit_int_sv_2, (uint16_t)get_var_unit_int_sv_2());
-  mb.Hreg(unit_int_sv_3, (uint16_t)get_var_unit_int_sv_3());
-  mb.Hreg(unit_int_sv_4, (uint16_t)get_var_unit_int_sv_4());
-  mb.Hreg(unit_int_sv_5, (uint16_t)get_var_unit_int_sv_5());
-
-  // unit read pv
-  mb.Hreg(unit_pv_1, (uint16_t)get_var_unit_pv_1());
-  mb.Hreg(unit_pv_2, (uint16_t)get_var_unit_pv_2());
-  mb.Hreg(unit_pv_3, (uint16_t)get_var_unit_pv_3());
-  mb.Hreg(unit_pv_4, (uint16_t)get_var_unit_pv_4());
-  mb.Hreg(unit_pv_5, (uint16_t)get_var_unit_pv_5());
-}
-
-void update_MODBUS_Registry_from_struct(ModbusRegisterValues deviceParam)
-{
-  // flag
-  mb.Hreg(lock_flag, deviceParam.lock_flag ? 1 : 0);
-  mb.Hreg(run_flag, deviceParam.run_flag ? 1 : 0);
-
-  // display
-  mb.Hreg(display_pv_1, (uint16_t)deviceParam.display_pv_1);
-  mb.Hreg(display_pv_2, (uint16_t)deviceParam.display_pv_2);
-  mb.Hreg(display_pv_3, (uint16_t)deviceParam.display_pv_3);
-  mb.Hreg(display_pv_4, (uint16_t)deviceParam.display_pv_4);
-  mb.Hreg(display_pv_5, (uint16_t)deviceParam.display_pv_5);
-
-  // progress
-  mb.Hreg(run_progress_max, (uint16_t)deviceParam.run_progress_max);
-  mb.Hreg(run_progress, (uint16_t)deviceParam.run_progress);
-
-  // run sv
-  mb.Hreg(run_sv_1, (uint16_t)deviceParam.run_sv_1);
-  mb.Hreg(run_sv_2, (uint16_t)deviceParam.run_sv_2);
-  mb.Hreg(run_sv_3, (uint16_t)deviceParam.run_sv_3);
-  mb.Hreg(run_sv_4, (uint16_t)deviceParam.run_sv_4);
-  mb.Hreg(run_sv_5, (uint16_t)deviceParam.run_sv_5);
-  mb.Hreg(run_sv_select, (uint16_t)deviceParam.run_sv_select);
-  mb.Hreg(run_sv_status, (uint16_t)deviceParam.run_sv_status);
-
-  // unit read interval (SV)
-  mb.Hreg(unit_int_sv_1, (uint16_t)deviceParam.unit_int_sv_1);
-  mb.Hreg(unit_int_sv_2, (uint16_t)deviceParam.unit_int_sv_2);
-  mb.Hreg(unit_int_sv_3, (uint16_t)deviceParam.unit_int_sv_3);
-  mb.Hreg(unit_int_sv_4, (uint16_t)deviceParam.unit_int_sv_4);
-  mb.Hreg(unit_int_sv_5, (uint16_t)deviceParam.unit_int_sv_5);
-
-  // unit read pv
-  mb.Hreg(unit_pv_1, (uint16_t)deviceParam.unit_pv_1);
-  mb.Hreg(unit_pv_2, (uint16_t)deviceParam.unit_pv_2);
-  mb.Hreg(unit_pv_3, (uint16_t)deviceParam.unit_pv_3);
-  mb.Hreg(unit_pv_4, (uint16_t)deviceParam.unit_pv_4);
-  mb.Hreg(unit_pv_5, (uint16_t)deviceParam.unit_pv_5);
+  lv_chart_set_type(target_chart, LV_CHART_TYPE_LINE);
+  lv_chart_set_point_count(target_chart, 30);
+  lv_chart_set_update_mode(target_chart, LV_CHART_UPDATE_MODE_SHIFT);
+  *target_ser = lv_chart_add_series(target_chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+  //*target_ser_y_points = lv_chart_get_series_y_array(target_chart, *target_ser);
 }
 
 void setup_LVGL()
@@ -222,9 +93,40 @@ void setup_LVGL()
   lv_init();
   ui_init();
 
+  setup_LVGL_chart_set(objects.chart_1, &ser1, &ser1_y_points);
+  setup_LVGL_chart_set(objects.chart_2, &ser2, &ser2_y_points);
+  setup_LVGL_chart_set(objects.chart_3, &ser3, &ser3_y_points);
+  setup_LVGL_chart_set(objects.chart_4, &ser4, &ser4_y_points);
+  setup_LVGL_chart_set(objects.chart_5, &ser5, &ser5_y_points);
+
+  setup_LVGL_chart_range();
+
   String LVGL_Arduino = "LVGL information : ";
   LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
   M5_LOGI("%s", LVGL_Arduino);
+}
+
+void setup_LVGL_chart_range()
+{
+  // chart 1
+  lv_chart_set_range(objects.chart_1, LV_CHART_AXIS_PRIMARY_Y,
+                     ResBuff.chart_min_1, ResBuff.chart_max_1);
+
+  // chart 2
+  lv_chart_set_range(objects.chart_2, LV_CHART_AXIS_PRIMARY_Y,
+                     ResBuff.chart_min_2, ResBuff.chart_max_2);
+
+  // chart 3
+  lv_chart_set_range(objects.chart_3, LV_CHART_AXIS_PRIMARY_Y,
+                     ResBuff.chart_min_3, ResBuff.chart_max_3);
+
+  // chart 4
+  lv_chart_set_range(objects.chart_4, LV_CHART_AXIS_PRIMARY_Y,
+                     ResBuff.chart_min_4, ResBuff.chart_max_4);
+
+  // chart 5
+  lv_chart_set_range(objects.chart_5, LV_CHART_AXIS_PRIMARY_Y,
+                     ResBuff.chart_min_5, ResBuff.chart_max_5);
 }
 
 void setup()
@@ -234,13 +136,13 @@ void setup()
   M5.begin(cfg);
   M5.Log.setLogLevel(m5::log_target_serial, ESP_LOG_VERBOSE);
 
-  loadEEPROM(ResBuff);
+  loadEEPROM();
 
   setup_LVGL();
   setup_MODBUS_Slave(SLAVE_ID);
 
-  update_MODBUS_Registry_from_struct(ResBuff);
-  update_device_from_MODBUS_Registry();
+  update_registry_from_struct();
+  update_device_from_struct();
 
   Wire.begin(PortA_SDA, PortA_SCL);
   Wire.setClock(100000);
@@ -266,25 +168,43 @@ void loop()
   M5.update();
   unsigned long Millis = millis();
 
+  // MODBUS update
+  if (Millis - lastMillis_REG > interval_REG)
+  {
+    mb.task();
+    update_struct_from_registry();
+    update_device_from_struct();
+    lastMillis_REG = Millis;
+  }
+
+  // LVGL update
   if (Millis - lastMillis_UI > interval_UI)
   {
     lv_task_handler();
     ui_tick();
+    update_struct_from_device();
+    update_registry_from_struct();
     lastMillis_UI = Millis;
+
+    if (interval_US != ResBuff.unit_int_sv_1)
+    {
+      interval_US = ResBuff.unit_int_sv_1;
+    }
+
+    if (interval_PBH != ResBuff.unit_int_sv_2)
+    {
+      interval_PBH = ResBuff.unit_int_sv_2;
+    }
   }
 
-  if (Millis - lastMillis_REG > interval_REG)
-  {
-    mb.task();
-    update_device_from_MODBUS_Registry();
-    lastMillis_REG = Millis;
-  }
-
+  // Units update
   if (Millis - lastMillis_US > interval_US)
   {
     int32_t Distance = (int32_t)(us_sensor.getDistance() * 10.0f);
     lastMillis_US = Millis;
     set_var_unit_pv_1(Distance);
+    lv_chart_set_next_value(objects.chart_1, ser1, Distance);
+    //chart_auto_scale(objects.chart_1, ser1);
   }
 
   if (Millis - lastMillis_PBH > interval_PBH)
@@ -292,6 +212,8 @@ void loop()
     int32_t AD0 = (int32_t)(pbhub.analogRead(0));
     lastMillis_PBH = Millis;
     set_var_unit_pv_2(AD0);
+    lv_chart_set_next_value(objects.chart_2, ser2, AD0);
+    //chart_auto_scale(objects.chart_2, ser2);
   }
 
   yield();
