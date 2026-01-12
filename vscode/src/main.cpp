@@ -56,7 +56,6 @@ void chart_auto_scale(lv_obj_t *chart, lv_chart_series_t *ser)
       max_v = y[i];
   }
 
-  // 余裕を持たせる（見やすさのため）
   int32_t margin = (max_v - min_v) / 10;
   if (margin < 10)
     margin = 10;
